@@ -2,8 +2,8 @@ TOTAL_NUM_UPDATES=2036
 WARMUP_UPDATES=122
 LR=2e-05
 NUM_CLASSES=2
-MAX_SENTENCES=2
-ROBERTA_PATH=checkpoint/roberta/wiki-scalar-4-quant-noise
+MAX_SENTENCES=4
+ROBERTA_PATH=checkpoint/roberta/wiki-scalar-4-quant-noise/checkpoint_best.pt
 RTE_PATH=RTE-bin/
 SAVE_DIR=checkpoint/roberta/rte-scalar-4-quant-noise
 
@@ -16,7 +16,7 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --reset-optimizer --reset-dataloader --reset-meters \
     --required-batch-size-multiple 1 \
     --init-token 0 --separator-token 2 \
-    --arch roberta_large \
+    --arch roberta_base \
     --criterion sentence_prediction \
     --num-classes $NUM_CLASSES \
     --dropout 0.1 --attention-dropout 0.1 \
