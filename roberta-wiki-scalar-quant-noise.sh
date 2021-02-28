@@ -1,5 +1,5 @@
-TOTAL_UPDATES=25000
-WARMUP_UPDATES=10000
+TOTAL_UPDATES=3000
+WARMUP_UPDATES=500
 PEAK_LR=0.0005
 TOKENS_PER_SAMPLE=512
 MAX_POSITIONS=512
@@ -7,7 +7,7 @@ MAX_SENTENCES=2
 UPDATE_FREQ=16
 DATA_DIR=data-bin/wikitext-103
 RESTORE_DIR=roberta_base/model.pt
-SAVE_DIR=checkpoint/roberta/wiki-scalar-quant-noise
+SAVE_DIR=checkpoint/roberta/wiki-scalar-quant-noise-test2
 
 PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $DATA_DIR \
     --task masked_lm --criterion masked_lm --arch roberta_base \

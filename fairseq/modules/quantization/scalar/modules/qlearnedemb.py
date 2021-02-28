@@ -10,9 +10,12 @@ import torch.nn.functional as F
 from ..ops import emulate_int
 from ..... import utils
 
+from torch import Tensor
+from typing import Dict, Optional
+
 class IntLearnedPositionalEmbedding(nn.Module):
     """
-    Quantized counterpart of the nn.Embedding module that applies QuantNoise during training.
+    Quantized counterpart of the LearnedPositionalEmbedding module that applies QuantNoise during training.
 
     Args:
         - num_embeddings: number of tokens
@@ -87,7 +90,7 @@ class IntLearnedPositionalEmbedding(nn.Module):
             with torch.no_grad():
                 self.weight[self.padding_idx].fill_(0)
 
-    def forward(self, input):
+    def forward(self, input, incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None, positions: Optional[Tensor] = None):
         # train with QuantNoise and evaluate the fully quantized network
         p = self.p if self.training else 1
 
@@ -119,7 +122,22 @@ class IntLearnedPositionalEmbedding(nn.Module):
             + noise.detach()
         )
 
-        positions = utils.make_positions(input, self.padding_idx, onnx_trace=False)
+        """Input is expected to be of size [bsz x seqlen]."""
+        assert (positions is None) or (
+            self.padding_idx is None
+        ), "If positions is pre-computed then padding_idx should not be set."
+
+        if positions is None:
+            if incremental_state is not None:
+                # positions is the same for every token when decoding a single step
+                # Without the int() cast, it doesn't work in some cases when exporting to ONNX
+                positions = torch.zeros(
+                    (1, 1), device=input.device, dtype=input.dtype
+                ).fill_(int(self.padding_idx + input.size(1)))
+            else:
+                positions = utils.make_positions(
+                    input, self.padding_idx, onnx_trace=False
+                )
         # return output
         output = F.embedding(
             positions,
