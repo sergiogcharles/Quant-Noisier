@@ -33,7 +33,6 @@ def emulate_int1_histogram(w, scale=None, zero_point=None):
         obs.quant_min, obs.quant_max = 0, 1
         obs.has_customized_qrange = True
         _ = obs(w.float())
-        breakpoint()
         scale, zero_point = obs.calculate_qparams()
         scale = scale.cuda().type_as(w)
         zero_point = zero_point.cuda().type_as(w)
