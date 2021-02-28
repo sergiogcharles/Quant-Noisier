@@ -7,3 +7,4 @@ from .qact import ActivationQuantizer  # NOQA
 from .qconv import IntConv2d  # NOQA
 from .qemb import IntEmbedding  # NOQA
 from .qlinear import IntLinear  # NOQA
+from .qlearnedemb import IntLearnedPositionalEmbedding
