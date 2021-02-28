@@ -6,7 +6,7 @@ def main(args):
     roberta = RobertaModel.from_pretrained(
         args.checkpoint_dir,
         args.checkpoint_file,
-        data_name_or_path='RTE'
+        data_name_or_path='RTE-bin'
     )
 
     label_fn = lambda label: roberta.task.label_dictionary.string(
