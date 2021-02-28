@@ -6,6 +6,7 @@ MAX_SENTENCES=4
 ROBERTA_PATH=checkpoint/roberta/wiki-no-quant-noise/checkpoint_best.pt
 RTE_PATH=RTE-bin/
 SAVE_DIR=checkpoint/roberta/rte-no-quant-noise
+UPDATE_FREQ=4
 
 PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --restore-file $ROBERTA_PATH \
@@ -27,4 +28,5 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --find-unused-parameters \
     --best-checkpoint-metric accuracy --maximize-best-checkpoint-metric \
     --ddp-backend legacy_ddp \
-    --save-dir $SAVE_DIR
+    --save-dir $SAVE_DIR \
+    --update-freq $UPDATE_FREQ
