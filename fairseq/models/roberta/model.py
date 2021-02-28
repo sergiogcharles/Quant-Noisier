@@ -158,6 +158,12 @@ class RobertaModel(FairseqEncoderModel):
             help="scalar quantization noise and scalar quantization at training time",
         )
         parser.add_argument(
+            "--bits",
+            type=int,
+            default=8,
+            help="number of bits for scalar quantization noise and scalar quantization at training time",
+        )
+        parser.add_argument(
             "--untie-weights-roberta",
             action="store_true",
             help="Untie weights between embeddings and classifiers in RoBERTa",

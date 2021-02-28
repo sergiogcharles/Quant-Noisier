@@ -319,7 +319,6 @@ class FairseqTask(object):
             a :class:`~fairseq.models.BaseFairseqModel` instance
         """
         from fairseq import models, quantization_utils
-
         model = models.build_model(cfg, self)
         model = quantization_utils.quantize_model_scalar(model, cfg)
         return model
@@ -629,7 +628,6 @@ class LegacyFairseqTask(FairseqTask):
             a :class:`~fairseq.models.BaseFairseqModel` instance
         """
         from fairseq import models, quantization_utils
-
         model = models.build_model(args, self)
         model = quantization_utils.quantize_model_scalar(model, args)
         return model

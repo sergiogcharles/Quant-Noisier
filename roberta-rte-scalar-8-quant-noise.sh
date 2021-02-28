@@ -2,10 +2,10 @@ TOTAL_NUM_UPDATES=2036
 WARMUP_UPDATES=122
 LR=2e-05
 NUM_CLASSES=2
-MAX_SENTENCES=1
-ROBERTA_PATH=checkpoint/roberta/wiki-no-quant-noise
+MAX_SENTENCES=2
+ROBERTA_PATH=checkpoint/roberta/wiki-scalar-8-quant-noise
 RTE_PATH=RTE-bin/
-SAVE_DIR=checkpoint/roberta/rte-no-quant-noise
+SAVE_DIR=checkpoint/roberta/rte-scalar-8-quant-noise
 
 PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --restore-file $ROBERTA_PATH \
@@ -27,4 +27,6 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --find-unused-parameters \
     --best-checkpoint-metric accuracy --maximize-best-checkpoint-metric \
     --ddp-backend legacy_ddp \
-    --save-dir $SAVE_DIR
+    --quant-noise-scalar 0.5 \
+    --save-dir $SAVE_DIR \
+    --bits 8

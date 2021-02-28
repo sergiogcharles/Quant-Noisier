@@ -7,7 +7,7 @@ MAX_SENTENCES=2
 UPDATE_FREQ=16
 DATA_DIR=data-bin/wikitext-103
 RESTORE_DIR=roberta_base/model.pt
-SAVE_DIR=checkpoint/roberta/wiki-scalar-quant-noise-test2
+SAVE_DIR=checkpoint/roberta/FAKE-TEST-CLI
 
 PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $DATA_DIR \
     --task masked_lm --criterion masked_lm --arch roberta_base \
@@ -24,4 +24,5 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $DATA_DIR \
     --save-dir $SAVE_DIR \
     --ddp-backend legacy_ddp --encoder-layerdrop 0.2 \
     --quant-noise-scalar 0.5 --untie-weights-roberta \
-    --restore-file $RESTORE_DIR
+    --restore-file $RESTORE_DIR \
+    --bits 1

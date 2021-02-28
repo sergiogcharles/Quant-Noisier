@@ -109,7 +109,6 @@ def parse_args_and_arch(
         )
 
     from fairseq.models import ARCH_MODEL_REGISTRY, ARCH_CONFIG_REGISTRY, MODEL_REGISTRY
-
     # Before creating the true parser, we need to import optional user module
     # in order to eagerly import custom tasks, optimizers, architectures, etc.
     usr_parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
@@ -119,7 +118,6 @@ def parse_args_and_arch(
 
     if modify_parser is not None:
         modify_parser(parser)
-
     # The parser doesn't know about model/criterion/optimizer-specific args, so
     # we parse twice. First we parse the model/criterion/optimizer, then we
     # parse a second time after adding the *-specific arguments.

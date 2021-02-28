@@ -6,7 +6,7 @@ def main(args):
     roberta = RobertaModel.from_pretrained(
         args.checkpoint_dir,
         args.checkpoint_file,
-        data_name_or_path='RTE-bin'
+        data_name_or_path='RTE'
     )
 
     label_fn = lambda label: roberta.task.label_dictionary.string(
@@ -15,7 +15,7 @@ def main(args):
     ncorrect, nsamples = 0, 0
     roberta.cuda()
     roberta.eval()
-    with open('glue_data/RTE/dev.tsv') as fin:
+    with open('RTE/dev.tsv') as fin:
         fin.readline()
         for index, line in enumerate(fin):
             tokens = line.strip().split('\t')
@@ -29,7 +29,7 @@ def main(args):
 
 if __name__ == '__main__':
     #TODO: Make this arg parsing cleaner
-    args = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint_dir")
     parser.add_argument("checkpoint_file")
     args = parser.parse_args()
