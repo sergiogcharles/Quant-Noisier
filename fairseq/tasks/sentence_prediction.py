@@ -252,7 +252,7 @@ class SentencePredictionTask(LegacyFairseqTask):
         return self.datasets[split]
 
     def build_model(self, args):
-        from fairseq import models
+        from fairseq import models, quantization_utils
 
         model = models.build_model(args, self)
 
@@ -260,7 +260,7 @@ class SentencePredictionTask(LegacyFairseqTask):
             getattr(args, "classification_head_name", "sentence_classification_head"),
             num_classes=self.args.num_classes,
         )
-
+        model = quantization_utils.quantize_model_scalar(model, args)
         return model
 
     def max_positions(self):
