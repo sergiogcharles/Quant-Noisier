@@ -16,7 +16,7 @@ from ...learned_positional_embedding import LearnedPositionalEmbedding
 MAPPING = {nn.Linear: IntLinear, nn.Embedding: IntEmbedding, nn.Conv2d: IntConv2d, LearnedPositionalEmbedding: IntLearnedPositionalEmbedding}
 #MAPPING = {nn.Linear: IntLinear, nn.Embedding: IntEmbedding, nn.Conv2d: IntConv2d}
 
-def quantize_model_(model, p=0.2, bits=8, update_step=3000):
+def quantize_model_(model, p=0.2, bits=8, update_step=3000, jitter=False):
     """
     Replaces all modules with their scalar quantized counterpart and
     registers hooks to quantize the post-ativations of those modules.
@@ -52,6 +52,7 @@ def quantize_model_(model, p=0.2, bits=8, update_step=3000):
             "bits": bits,
             "method": "histogram",
             "counter": 0,
+            "jitter": jitter
         }
 
         # instantiate the quantized counterpart
