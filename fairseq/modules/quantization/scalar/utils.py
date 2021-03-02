@@ -62,7 +62,6 @@ def quantize_model_(model, p=0.2, bits=8, update_step=3000, jitter=False):
             params = module.__dict__
             params.update(q_params)
             quantized_module.__dict__.update(params)
-
         else:
             if is_master_process:
                 logging.info(f"Module {module} not yet supported for quantization")

@@ -89,7 +89,16 @@ class IntEmbedding(nn.Module):
 
     def forward(self, input):
         # train with QuantNoise and evaluate the fully quantized network
-        p = self.p if self.training else 1
+        if self.training:
+            p = self.p
+            if self.jitter:
+                downside = 0.25 * p
+                upside = 0.5 * p
+                rand_val = torch.rand(1).item()
+                p -= downside
+                p += upside * rand_val
+        else:
+            p = 1
 
         # update parameters every 1000 iterations
         if self.counter % self.update_step == 0:
