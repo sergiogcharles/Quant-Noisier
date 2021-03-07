@@ -49,7 +49,7 @@ class IntLearnedPositionalEmbedding(nn.Module):
         bits=8,
         method="histogram",
     ):
-        super(IntEmbedding, self).__init__()
+        super(IntLearnedPositionalEmbedding, self).__init__()
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
         if padding_idx is not None:
