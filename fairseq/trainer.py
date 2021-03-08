@@ -7,6 +7,7 @@
 Train a network across multiple GPUs.
 """
 
+import collections
 import contextlib
 import logging
 import sys
@@ -134,6 +135,8 @@ class Trainer(object):
         self._start_time = time.time()
         self._previous_training_time = 0
         self._cumulative_training_time = None
+        self.id_to_p_delta = collections.defaultdict(float)
+        self.id_to_loss = collections.defaultdict(float)
 
     def reinitialize(self):
         """Reinitialize the Trainer, typically after model params change."""
@@ -493,6 +496,19 @@ class Trainer(object):
         self.reset_dummy_batch(batch_iterator.first_batch)
         return batch_iterator
 
+
+    def compute_p_delta(self):
+        if self.model.args.quant_noise_adaptive:
+            losses = [x for x in self.id_to_loss.values()]
+            if losses:
+                # Scale to (0, 1): (x - min) / (max - min)
+                min_loss, max_loss = min(losses), max(losses)
+                self.id_to_p_delta = {k : (v - min_loss) / (max_loss - min_loss) for k, v in self.id_to_loss.items()}
+                # Scale to (-1, 1): (x * 2) - 1
+                self.id_to_p_delta = {k : (v * 2) - 1 for k, v in self.id_to_p_delta.items()}
+                # Multiply by lambda coefficient
+                self.id_to_p_delta = {k : v * self.model.args.lamb for k, v in self.id_to_p_delta.items()}
+
     def begin_epoch(self, epoch):
         """Called at the beginning of each epoch."""
         logger.info("begin training epoch {}".format(epoch))
@@ -510,6 +526,8 @@ class Trainer(object):
 
             xm.rendezvous("begin_epoch")  # wait for all workers
             xm.mark_step()
+
+        self.compute_p_delta()
 
     def begin_valid_epoch(self, epoch):
         """Called at the beginning of each validation epoch."""
@@ -553,6 +571,12 @@ class Trainer(object):
             try:
                 with maybe_no_sync():
                     # forward and backward
+                    if self.model.args.quant_noise_adaptive:
+                        assert self.model.args.batch_size == 1, "Batch size must be 1 for adaptive quantization noise"
+                        id = sample['id'].item()
+                        p_delta = self.id_to_p_delta[id]
+                    else:
+                        p_delta = 0.0
                     loss, sample_size_i, logging_output = self.task.train_step(
                         sample=sample,
                         model=self.model,
@@ -560,7 +584,10 @@ class Trainer(object):
                         optimizer=self.optimizer,
                         update_num=self.get_num_updates(),
                         ignore_grad=is_dummy_batch,
+                        p_delta=p_delta
                     )
+                    if self.model.args.quant_noise_adaptive:
+                        self.id_to_loss[id] = loss.data.item()
                     del loss
 
                 logging_outputs.append(logging_output)

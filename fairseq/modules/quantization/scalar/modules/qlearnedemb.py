@@ -49,7 +49,7 @@ class IntLearnedPositionalEmbedding(nn.Module):
         bits=8,
         method="histogram",
     ):
-        super(IntEmbedding, self).__init__()
+        super(IntLearnedPositionalEmbedding, self).__init__()
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
         if padding_idx is not None:
@@ -90,10 +90,10 @@ class IntLearnedPositionalEmbedding(nn.Module):
             with torch.no_grad():
                 self.weight[self.padding_idx].fill_(0)
 
-    def forward(self, input, incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None, positions: Optional[Tensor] = None):
+    def forward(self, input, incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None, positions: Optional[Tensor] = None, p_delta=0.0):
         # train with QuantNoise and evaluate the fully quantized network
         if self.training:
-            p = self.p
+            p = self.p - p_delta
             if self.jitter:
                 downside = 0.25 * p
                 upside = 0.5 * p

@@ -170,6 +170,18 @@ class RobertaModel(FairseqEncoderModel):
             help="number of bits for scalar quantization noise and scalar quantization at training time",
         )
         parser.add_argument(
+            "--quant-noise-adaptive",
+            type=bool,
+            default=False,
+            help="whether to add adaptive noise to scalar quantization noise and scalar quantization at training time",
+        )
+        parser.add_argument(
+            "--lamb",
+            type=float,
+            default=0.5,
+            help="lambda hyperparameter value for adaptive quant noise"
+        )
+        parser.add_argument(
             "--untie-weights-roberta",
             action="store_true",
             help="Untie weights between embeddings and classifiers in RoBERTa",
@@ -184,7 +196,6 @@ class RobertaModel(FairseqEncoderModel):
     @classmethod
     def build_model(cls, args, task):
         """Build a new model instance."""
-
         # make sure all arguments are present
         base_architecture(args)
 
@@ -200,15 +211,14 @@ class RobertaModel(FairseqEncoderModel):
         features_only=False,
         return_all_hiddens=False,
         classification_head_name=None,
+        p_delta=0.0,
         **kwargs
     ):
         if classification_head_name is not None:
             features_only = True
-
-        x, extra = self.encoder(src_tokens, features_only, return_all_hiddens, **kwargs)
-
+        x, extra = self.encoder(src_tokens, features_only, return_all_hiddens, p_delta=p_delta, **kwargs)
         if classification_head_name is not None:
-            x = self.classification_heads[classification_head_name](x)
+            x = self.classification_heads[classification_head_name](x, p_delta=p_delta)
         return x, extra
 
     def get_normalized_probs(self, net_output, log_probs, sample=None):
@@ -361,13 +371,12 @@ class RobertaLMHead(nn.Module):
         self.weight = weight
         self.bias = nn.Parameter(torch.zeros(output_dim))
 
-    def forward(self, features, masked_tokens=None, **kwargs):
+    def forward(self, features, masked_tokens=None, p_delta=0.0, **kwargs):
         # Only project the masked tokens while training,
         # saves both memory and computation
         if masked_tokens is not None:
             features = features[masked_tokens, :]
-
-        x = self.dense(features)
+        x = self.dense(features, p_delta=p_delta)
         x = self.activation_fn(x)
         x = self.layer_norm(x)
         # project back to size of vocabulary with bias
@@ -403,13 +412,13 @@ class RobertaClassificationHead(nn.Module):
                 )
             self.out_proj = torch.nn.utils.spectral_norm(self.out_proj)
 
-    def forward(self, features, **kwargs):
+    def forward(self, features, p_delta=0.0, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
         x = self.dropout(x)
-        x = self.dense(x)
+        x = self.dense(x, p_delta=p_delta)
         x = self.activation_fn(x)
         x = self.dropout(x)
-        x = self.out_proj(x)
+        x = self.out_proj(x, p_delta=p_delta)
         return x
 
 
@@ -463,6 +472,7 @@ class RobertaEncoder(FairseqEncoder):
         features_only=False,
         return_all_hiddens=False,
         masked_tokens=None,
+        p_delta=0.0,
         **unused
     ):
         """
@@ -480,27 +490,28 @@ class RobertaEncoder(FairseqEncoder):
                 - a dictionary of additional data, where 'inner_states'
                   is a list of hidden states. Note that the hidden
                   states have shape `(src_len, batch, vocab)`.
-        """
+        """        
         x, extra = self.extract_features(
-            src_tokens, return_all_hiddens=return_all_hiddens
+            src_tokens, return_all_hiddens=return_all_hiddens, p_delta=p_delta
         )
         if not features_only:
-            x = self.output_layer(x, masked_tokens=masked_tokens)
+            x = self.output_layer(x, masked_tokens=masked_tokens, p_delta=p_delta)
         return x, extra
 
-    def extract_features(self, src_tokens, return_all_hiddens=False, **kwargs):
+    def extract_features(self, src_tokens, return_all_hiddens=False, p_delta=0.0, **kwargs):
         encoder_out = self.sentence_encoder(
             src_tokens,
             return_all_hiddens=return_all_hiddens,
             token_embeddings=kwargs.get("token_embeddings", None),
+            p_delta=p_delta,
         )
         # T x B x C -> B x T x C
         features = encoder_out["encoder_out"][0].transpose(0, 1)
         inner_states = encoder_out["encoder_states"] if return_all_hiddens else None
         return features, {"inner_states": inner_states}
 
-    def output_layer(self, features, masked_tokens=None, **unused):
-        return self.lm_head(features, masked_tokens)
+    def output_layer(self, features, masked_tokens=None, p_delta=0.0, **unused):
+        return self.lm_head(features, masked_tokens, p_delta=p_delta)
 
     def max_positions(self):
         """Maximum output length supported by the encoder."""

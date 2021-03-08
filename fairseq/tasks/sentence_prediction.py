@@ -253,7 +253,7 @@ class SentencePredictionTask(LegacyFairseqTask):
 
     def build_model(self, args):
         from fairseq import models, quantization_utils
-
+        
         model = models.build_model(args, self)
 
         model.register_classification_head(

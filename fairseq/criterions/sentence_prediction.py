@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import collections 
 import math
 
 import torch
@@ -26,7 +27,7 @@ class SentencePredictionCriterion(FairseqCriterion):
                             help='name of the classification head to use')
         # fmt: on
 
-    def forward(self, model, sample, reduce=True):
+    def forward(self, model, sample, reduce=True, p_delta=0.0):
         """Compute the loss for the given sample.
 
         Returns a tuple with three elements:
@@ -38,11 +39,12 @@ class SentencePredictionCriterion(FairseqCriterion):
             hasattr(model, "classification_heads")
             and self.classification_head_name in model.classification_heads
         ), "model must provide sentence classification head for --criterion=sentence_prediction"
-
+        
         logits, _ = model(
             **sample["net_input"],
             features_only=True,
             classification_head_name=self.classification_head_name,
+            p_delta=p_delta
         )
         targets = model.get_targets(sample, [logits]).view(-1)
         sample_size = targets.numel()
