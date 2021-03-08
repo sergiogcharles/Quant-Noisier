@@ -18,7 +18,6 @@ class SentencePredictionCriterion(FairseqCriterion):
         super().__init__(task)
         self.classification_head_name = classification_head_name
         self.regression_target = regression_target
-        self.id_to_p_delta = collections.defaultdict(float)        
 
     @staticmethod
     def add_args(parser):
@@ -28,11 +27,7 @@ class SentencePredictionCriterion(FairseqCriterion):
                             help='name of the classification head to use')
         # fmt: on
 
-    def compute_p_delta_for_next_epoch(self, loss_value, lamb):
-        print(f"Lambda set to {lamb}")
-        return ((loss_value * 2) - 1) * lamb
-
-    def forward(self, model, sample, reduce=True):
+    def forward(self, model, sample, reduce=True, p_delta=0.0):
         """Compute the loss for the given sample.
 
         Returns a tuple with three elements:
@@ -44,15 +39,7 @@ class SentencePredictionCriterion(FairseqCriterion):
             hasattr(model, "classification_heads")
             and self.classification_head_name in model.classification_heads
         ), "model must provide sentence classification head for --criterion=sentence_prediction"
-        if model.args.quant_noise_adaptive:
-            assert model.args.batch_size == 1, "Batch size must be 1 for adaptive quantization noise"
-            id = sample['id'].item()
-            p_delta = self.id_to_p_delta[id]
-            print("Using adaptive quantization noise")
-        else:
-            p_delta = 0.0
-            print("Not using adaptive quantization noise")
-
+        
         logits, _ = model(
             **sample["net_input"],
             features_only=True,
@@ -69,9 +56,6 @@ class SentencePredictionCriterion(FairseqCriterion):
             logits = logits.view(-1).float()
             targets = targets.float()
             loss = F.mse_loss(logits, targets, reduction="sum")
-
-        if model.args.quant_noise_adaptive:
-            self.id_to_p_delta[id] = self.compute_p_delta_for_next_epoch(loss.data, model.args.lamb)
 
         logging_output = {
             "loss": loss.data,

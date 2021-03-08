@@ -89,9 +89,8 @@ class IntEmbedding(nn.Module):
 
     def forward(self, input, p_delta=0.0):
         # train with QuantNoise and evaluate the fully quantized network
-        print(p_delta)
         if self.training:
-            p = self.p + p_delta
+            p = self.p - p_delta
             if self.jitter:
                 downside = 0.25 * p
                 upside = 0.5 * p
