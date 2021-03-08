@@ -31,4 +31,6 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
     --quant-noise-scalar 0.5 \
     --save-dir $SAVE_DIR \
     --bits 8 \
-    --update-freq $UPDATE_FREQ
+    --update-freq $UPDATE_FREQ \
+    --quant-noise-adaptive True \
+    --lamb 0.3 \
