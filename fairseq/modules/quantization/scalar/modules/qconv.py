@@ -93,10 +93,11 @@ class IntConv2d(_ConvNd):
             self.groups,
         )
 
-    def forward(self, input):
+    def forward(self, input, p_delta=0.0):
+        print(p_delta)
         # train with QuantNoise and evaluate the fully quantized network
         if self.training:
-            p = self.p
+            p = self.p + p_delta
             if self.jitter:
                 downside = 0.25 * p
                 upside = 0.5 * p

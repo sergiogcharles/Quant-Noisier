@@ -389,14 +389,14 @@ class TransformerEncoder(FairseqEncoder):
         return layer
 
     def forward_embedding(
-        self, src_tokens, token_embedding: Optional[torch.Tensor] = None
+        self, src_tokens, token_embedding: Optional[torch.Tensor] = None, p_delta=0.0
     ):
         # embed tokens and positions
         if token_embedding is None:
-            token_embedding = self.embed_tokens(src_tokens)
+            token_embedding = self.embed_tokens(src_tokens, p_delta=p_delta)
         x = embed = self.embed_scale * token_embedding
         if self.embed_positions is not None:
-            x = embed + self.embed_positions(src_tokens)
+            x = embed + self.embed_positions(src_tokens, p_delta=p_delta)
         if self.layernorm_embedding is not None:
             x = self.layernorm_embedding(x)
         x = self.dropout_module(x)
@@ -410,6 +410,7 @@ class TransformerEncoder(FairseqEncoder):
         src_lengths: Optional[torch.Tensor] = None,
         return_all_hiddens: bool = False,
         token_embeddings: Optional[torch.Tensor] = None,
+        p_delta: float = 0.0
     ):
         """
         Args:
@@ -437,7 +438,8 @@ class TransformerEncoder(FairseqEncoder):
         return self.forward_scriptable(src_tokens,
                                        src_lengths,
                                        return_all_hiddens,
-                                       token_embeddings)
+                                       token_embeddings,
+                                       p_delta=p_delta)
 
     # TorchScript doesn't support super() method so that the scriptable Subclass
     # can't access the base class model in Torchscript.
@@ -449,6 +451,7 @@ class TransformerEncoder(FairseqEncoder):
         src_lengths: Optional[torch.Tensor] = None,
         return_all_hiddens: bool = False,
         token_embeddings: Optional[torch.Tensor] = None,
+        p_delta=0.0
     ):
         """
         Args:
@@ -476,8 +479,7 @@ class TransformerEncoder(FairseqEncoder):
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
         has_pads = (src_tokens.device.type == "xla" or encoder_padding_mask.any())
-
-        x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
+        x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings, p_delta=p_delta)
 
         # account for padding while computing the representation
         if encoder_padding_mask is not None:
@@ -494,7 +496,7 @@ class TransformerEncoder(FairseqEncoder):
         # encoder layers
         for layer in self.layers:
             x = layer(
-                x, encoder_padding_mask=encoder_padding_mask if has_pads else None
+                x, encoder_padding_mask=encoder_padding_mask if has_pads else None, p_delta=p_delta
             )
             if return_all_hiddens:
                 assert encoder_states is not None

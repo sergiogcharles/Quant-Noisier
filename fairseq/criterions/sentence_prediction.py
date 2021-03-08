@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import collections 
 import math
 
 import torch
@@ -17,6 +18,8 @@ class SentencePredictionCriterion(FairseqCriterion):
         super().__init__(task)
         self.classification_head_name = classification_head_name
         self.regression_target = regression_target
+        self.id_to_p_delta = collections.defaultdict(float)
+        self.lamb = 0.5
 
     @staticmethod
     def add_args(parser):
@@ -25,6 +28,9 @@ class SentencePredictionCriterion(FairseqCriterion):
                             default='sentence_classification_head',
                             help='name of the classification head to use')
         # fmt: on
+
+    def compute_p_delta_for_next_epoch(self, loss_value):
+        return ((loss_value * 2) - 1) * self.lamb
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -38,11 +44,14 @@ class SentencePredictionCriterion(FairseqCriterion):
             hasattr(model, "classification_heads")
             and self.classification_head_name in model.classification_heads
         ), "model must provide sentence classification head for --criterion=sentence_prediction"
-
+        breakpoint()
+        id = sample['id'].item()
+        p_delta = self.id_to_p_delta[id]
         logits, _ = model(
             **sample["net_input"],
             features_only=True,
             classification_head_name=self.classification_head_name,
+            p_delta=p_delta
         )
         targets = model.get_targets(sample, [logits]).view(-1)
         sample_size = targets.numel()
@@ -54,6 +63,8 @@ class SentencePredictionCriterion(FairseqCriterion):
             logits = logits.view(-1).float()
             targets = targets.float()
             loss = F.mse_loss(logits, targets, reduction="sum")
+
+        self.id_to_p_delta[id] = self.compute_p_delta_for_next_epoch(loss.data)
 
         logging_output = {
             "loss": loss.data,
