@@ -39,5 +39,6 @@ for seed in "${seeds[@]}"; do
         --bits 1 \
         --update-freq $UPDATE_FREQ \
         --quant-noise-adaptive True \
-        --lamb 0.125 
+        --lamb 0.125 \
+        --save-interval	20
 done
