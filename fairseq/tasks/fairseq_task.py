@@ -446,7 +446,7 @@ class FairseqTask(object):
         )
 
     def train_step(
-        self, sample, model, criterion, optimizer, update_num, ignore_grad=False, p_delta=0.0
+        self, sample, model, criterion, optimizer, update_num, ignore_grad=False, p_delta=None
     ):
         """
         Do forward and backward, and return the loss as computed by *criterion*
@@ -478,10 +478,10 @@ class FairseqTask(object):
             optimizer.backward(loss)
         return loss, sample_size, logging_output
 
-    def valid_step(self, sample, model, criterion):
+    def valid_step(self, sample, model, criterion, p_delta=None):
         model.eval()
         with torch.no_grad():
-            loss, sample_size, logging_output = criterion(model, sample)
+            loss, sample_size, logging_output = criterion(model, sample, p_delta=p_delta)
         return loss, sample_size, logging_output
 
     def optimizer_step(self, optimizer, model, update_num):

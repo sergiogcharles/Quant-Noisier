@@ -27,7 +27,7 @@ class SentencePredictionCriterion(FairseqCriterion):
                             help='name of the classification head to use')
         # fmt: on
 
-    def forward(self, model, sample, reduce=True, p_delta=0.0):
+    def forward(self, model, sample, reduce=True, p_delta=None):
         """Compute the loss for the given sample.
 
         Returns a tuple with three elements:

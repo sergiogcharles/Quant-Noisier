@@ -389,14 +389,20 @@ class TransformerEncoder(FairseqEncoder):
         return layer
 
     def forward_embedding(
-        self, src_tokens, token_embedding: Optional[torch.Tensor] = None, p_delta=0.0
+        self, src_tokens, token_embedding: Optional[torch.Tensor] = None, p_delta=None
     ):
         # embed tokens and positions
         if token_embedding is None:
-            token_embedding = self.embed_tokens(src_tokens, p_delta=p_delta)
+            if p_delta is not None:
+                token_embedding = self.embed_tokens(src_tokens, p_delta=p_delta)
+            else:
+                token_embedding = self.embed_tokens(src_tokens)
         x = embed = self.embed_scale * token_embedding
         if self.embed_positions is not None:
-            x = embed + self.embed_positions(src_tokens, p_delta=p_delta)
+            if p_delta is not None:
+                x = embed + self.embed_positions(src_tokens, p_delta=p_delta)
+            else:
+                x = embed + self.embed_positions(src_tokens)
         if self.layernorm_embedding is not None:
             x = self.layernorm_embedding(x)
         x = self.dropout_module(x)
@@ -410,7 +416,7 @@ class TransformerEncoder(FairseqEncoder):
         src_lengths: Optional[torch.Tensor] = None,
         return_all_hiddens: bool = False,
         token_embeddings: Optional[torch.Tensor] = None,
-        p_delta: float = 0.0
+        p_delta: float = None
     ):
         """
         Args:
@@ -451,7 +457,7 @@ class TransformerEncoder(FairseqEncoder):
         src_lengths: Optional[torch.Tensor] = None,
         return_all_hiddens: bool = False,
         token_embeddings: Optional[torch.Tensor] = None,
-        p_delta=0.0
+        p_delta=None
     ):
         """
         Args:

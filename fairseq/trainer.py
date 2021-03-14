@@ -575,8 +575,10 @@ class Trainer(object):
                         assert self.model.args.batch_size == 1, "Batch size must be 1 for adaptive quantization noise"
                         id = sample['id'].item()
                         p_delta = self.id_to_p_delta[id]
-                    else:
+                    elif self.model.args.quant_noise_scalar:
                         p_delta = 0.0
+                    else:
+                        p_delta = None
                     loss, sample_size_i, logging_output = self.task.train_step(
                         sample=sample,
                         model=self.model,
@@ -825,8 +827,12 @@ class Trainer(object):
             sample, is_dummy_batch = self._prepare_sample(sample)
 
             try:
+                if self.model.args.quant_noise_scalar or self.model.args.quant_noise_adaptive:
+                    p_delta = 0.0
+                else:
+                    p_delta = None
                 _loss, sample_size, logging_output = self.task.valid_step(
-                    sample, self.model, self.criterion
+                    sample, self.model, self.criterion, p_delta=p_delta
                 )
             except RuntimeError as e:
                 if "out of memory" in str(e):

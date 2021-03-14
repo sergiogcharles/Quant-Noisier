@@ -87,7 +87,9 @@ class IntEmbedding(nn.Module):
             with torch.no_grad():
                 self.weight[self.padding_idx].fill_(0)
 
-    def forward(self, input, p_delta=0.0):
+    def forward(self, input, p_delta=None):
+        if p_delta is None:
+            p_delta = 0.0
         # train with QuantNoise and evaluate the fully quantized network
         if self.training:
             p = self.p - p_delta
