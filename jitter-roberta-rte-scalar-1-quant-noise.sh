@@ -38,7 +38,8 @@ for seed in "${seeds[@]}"; do
         --save-dir $SAVE_DIR \
         --bits 1 \
         --update-freq $UPDATE_FREQ \
-        --quant-noise-jitter True 
+        --quant-noise-jitter True \
+        --seed $seed
     
     rm $SAVE_DIR/checkpoint1.pt
     rm $SAVE_DIR/checkpoint2.pt

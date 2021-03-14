@@ -39,7 +39,8 @@ for seed in "${seeds[@]}"; do
         --bits 1 \
         --update-freq $UPDATE_FREQ \
         --quant-noise-adaptive True \
-        --lamb 0.125 
+        --lamb 0.125 \
+        --seed $seed
 
     rm $SAVE_DIR/checkpoint1.pt
     rm $SAVE_DIR/checkpoint2.pt
