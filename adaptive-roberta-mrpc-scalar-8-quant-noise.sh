@@ -2,9 +2,9 @@
 
 seeds=(1 2 3)
 for seed in "${seeds[@]}"; do
-    TOTAL_NUM_UPDATES=2036
-    WARMUP_UPDATES=122
-    LR=2e-05
+    TOTAL_NUM_UPDATES=2296
+    WARMUP_UPDATES=137
+    LR=1e-05
     NUM_CLASSES=2
     MAX_SENTENCES=1
     ROBERTA_PATH=roberta_base/model.pt
@@ -13,7 +13,7 @@ for seed in "${seeds[@]}"; do
     SAVE_DIR="checkpoint/roberta/adaptive-mrpc-scalar-8-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
-
+    
     PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $MRPC_PATH \
         --restore-file $ROBERTA_PATH \
         --max-positions 512 \
@@ -39,6 +39,16 @@ for seed in "${seeds[@]}"; do
         --bits 8 \
         --update-freq $UPDATE_FREQ \
         --quant-noise-adaptive True \
-        --lamb 0.125 \
-        --save-interval	20
+        --lamb 0.125 
+
+    rm $SAVE_DIR/checkpoint1.pt
+    rm $SAVE_DIR/checkpoint2.pt
+    rm $SAVE_DIR/checkpoint3.pt
+    rm $SAVE_DIR/checkpoint4.pt
+    rm $SAVE_DIR/checkpoint5.pt
+    rm $SAVE_DIR/checkpoint6.pt
+    rm $SAVE_DIR/checkpoint7.pt
+    rm $SAVE_DIR/checkpoint8.pt
+    rm $SAVE_DIR/checkpoint9.pt
+    rm $SAVE_DIR/checkpoint10.pt
 done
