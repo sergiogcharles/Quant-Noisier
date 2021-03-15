@@ -15,11 +15,13 @@ logger = logging.getLogger(__name__)
 def quantize_model_scalar(model, model_cfg: DictConfig):
     num_bits = getattr(model_cfg, "bits", 8)
     jitter = getattr(model_cfg, "quant_noise_jitter", False)
+    quant_noise_vanilla = getattr(model_cfg, "quant_noise_vanilla", False)
     quant_noise_scalar = getattr(model_cfg, "quant_noise_scalar", 0) or 0
     logger.info(f"QUANTIZATION: Using {num_bits} bits")
     logger.info(f"QUANTIZATION: Using {quant_noise_scalar} noise rate")
     logger.info(f"QUANTIZATION: jitter set to {jitter}")
-    if quant_noise_scalar > 0:
+    logger.info(f"QUANTIZATION: vanilla set to {quant_noise_vanilla}")
+    if quant_noise_scalar > 0 or quant_noise_vanilla:
         # quantize_model edits the model in place
         scalar.quantize_model_(model, p=quant_noise_scalar, bits=num_bits, update_step=1000, jitter=jitter)
     return model

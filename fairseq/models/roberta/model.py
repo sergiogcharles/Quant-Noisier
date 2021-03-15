@@ -164,6 +164,12 @@ class RobertaModel(FairseqEncoderModel):
             help="whether to add random jitter to scalar quantization noise and scalar quantization at training time",
         )
         parser.add_argument(
+            "--quant-noise-vanilla",
+            type=bool,
+            default=False,
+            help="whether to use vanilla quant",
+        )
+        parser.add_argument(
             "--bits",
             type=int,
             default=8,
