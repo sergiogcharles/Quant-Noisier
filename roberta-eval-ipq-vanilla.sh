@@ -1,1 +1,1 @@
-python inference.py checkpoint/roberta/rte-ipq-vanilla checkpoint_best.pt  
+python mrpc_inference.py checkpoint/roberta/mrpc-ipq-vanilla checkpoint_best.pt  
