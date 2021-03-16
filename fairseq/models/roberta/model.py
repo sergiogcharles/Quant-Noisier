@@ -164,10 +164,28 @@ class RobertaModel(FairseqEncoderModel):
             help="whether to add random jitter to scalar quantization noise and scalar quantization at training time",
         )
         parser.add_argument(
+            "--schedule-qnoise-rate",
+            type=bool,
+            default=False,
+            help="whether to schedule quantization noise rate during training",
+        )
+        parser.add_argument(
             "--quant-noise-vanilla",
             type=bool,
             default=False,
             help="whether to use vanilla quant",
+        )
+        parser.add_argument(
+            "--write-losses",
+            type=bool,
+            default=False,
+            help="whether to write losses to csv",
+        )
+        parser.add_argument(
+            "--loss-file",
+            type=str,
+            default="",
+            help="loss file for adaptive-new"
         )
         parser.add_argument(
             "--bits",
@@ -180,6 +198,12 @@ class RobertaModel(FairseqEncoderModel):
             type=bool,
             default=False,
             help="whether to add adaptive noise to scalar quantization noise and scalar quantization at training time",
+        )
+        parser.add_argument(
+            "--quant-noise-adaptive-new",
+            type=bool,
+            default=False,
+            help="whether to add new adaptive noise to scalar quantization noise and scalar quantization at training time",
         )
         parser.add_argument(
             "--lamb",

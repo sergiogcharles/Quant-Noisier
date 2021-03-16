@@ -138,6 +138,24 @@ class Trainer(object):
         self.id_to_p_delta = collections.defaultdict(float)
         self.id_to_loss = collections.defaultdict(float)
 
+        self.p_delta_schedule = None 
+        if self.model.args.schedule_qnoise_rate:
+            self.p_delta_schedule = self.make_p_delta_schedule(
+                mean_p=self.model.args.quant_noise_scalar,
+                max_epoch=cfg.optimization.max_epoch
+            )
+        
+    
+    def make_p_delta_schedule(self, mean_p, max_epoch):
+        P_SCHED_WIDTH_SCALER = 0.8
+        schedule_width = P_SCHED_WIDTH_SCALER * min(mean_p, 1 - mean_p) * 2
+        start_p = mean_p - (schedule_width / 2)
+        step_size = schedule_width / (max_epoch - 1)
+
+        p_schedule = [start_p + (step_size * i) for i in range(max_epoch)] 
+        return [mean_p - ps for ps in p_schedule]
+
+
     def reinitialize(self):
         """Reinitialize the Trainer, typically after model params change."""
         self._lr_scheduler = None
@@ -498,7 +516,12 @@ class Trainer(object):
 
 
     def compute_p_delta(self):
-        if self.model.args.quant_noise_adaptive:
+        if self.model.args.quant_noise_adaptive or self.model.args.quant_noise_adaptive_new:
+            if self.model.args.quant_noise_adaptive_new:
+                import pandas as pd
+                df = pd.read_csv(self.model.args.loss_file)
+                self.id_to_loss = {k : v[0] for k, v in df.to_dict('list').items()}
+                self.id_to_loss = {int(k) : v[0] for k, v in df.to_dict('list').items() if k != 'Unnamed: 0'}
             losses = [x for x in self.id_to_loss.values()]
             if losses:
                 # Scale to (0, 1): (x - min) / (max - min)
@@ -508,6 +531,13 @@ class Trainer(object):
                 self.id_to_p_delta = {k : (v * 2) - 1 for k, v in self.id_to_p_delta.items()}
                 # Multiply by lambda coefficient
                 self.id_to_p_delta = {k : v * self.model.args.lamb for k, v in self.id_to_p_delta.items()}
+
+    def write_csv(self):
+        if self.model.args.write_losses:
+            import pandas as pd
+            id_to_loss = {k: [v] for k, v in dict(self.id_to_loss).items()}
+            self.df = pd.DataFrame(id_to_loss)
+            self.df.to_csv('losses.csv')
 
     def begin_epoch(self, epoch):
         """Called at the beginning of each epoch."""
@@ -528,12 +558,15 @@ class Trainer(object):
             xm.mark_step()
 
         self.compute_p_delta()
+        self.write_csv()
+        self.epoch_number = epoch
 
     def begin_valid_epoch(self, epoch):
         """Called at the beginning of each validation epoch."""
-
+        self.write_csv()
         # task specific setup per validation epoch
         self.task.begin_valid_epoch(epoch, self.get_model())
+        
 
     def reset_dummy_batch(self, batch):
         self._dummy_batch = batch
@@ -575,10 +608,21 @@ class Trainer(object):
                         assert self.model.args.batch_size == 1, "Batch size must be 1 for adaptive quantization noise"
                         id = sample['id'].item()
                         p_delta = self.id_to_p_delta[id]
+                    elif self.model.args.quant_noise_adaptive_new:
+                        assert self.model.args.batch_size == 1, "Batch size must be 1 for adaptive quantization noise"
+                        id = sample['id'].item()
+                        p_delta = self.id_to_p_delta[id]
                     elif self.model.args.quant_noise_scalar:
                         p_delta = 0.0
                     else:
                         p_delta = None
+                    if self.model.args.write_losses:
+                        assert self.model.args.batch_size == 1, "Batch size must be 1 for write losses"
+                        id = sample['id'].item()
+
+                    if self.p_delta_schedule is not None:
+                        p_delta = self.p_delta_schedule[self.epoch_number - 1]
+
                     loss, sample_size_i, logging_output = self.task.train_step(
                         sample=sample,
                         model=self.model,
@@ -588,7 +632,7 @@ class Trainer(object):
                         ignore_grad=is_dummy_batch,
                         p_delta=p_delta
                     )
-                    if self.model.args.quant_noise_adaptive:
+                    if self.model.args.quant_noise_adaptive or self.model.args.write_losses:
                         self.id_to_loss[id] = loss.data.item()
                     del loss
 

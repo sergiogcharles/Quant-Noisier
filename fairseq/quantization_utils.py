@@ -17,6 +17,8 @@ def quantize_model_scalar(model, model_cfg: DictConfig):
     jitter = getattr(model_cfg, "quant_noise_jitter", False)
     quant_noise_vanilla = getattr(model_cfg, "quant_noise_vanilla", False)
     quant_noise_scalar = getattr(model_cfg, "quant_noise_scalar", 0) or 0
+    schedule_qnoise_rate = getattr(model_cfg, "schedule_qnoise_rate", 0) or 0
+    logger.info(f"QUANTIZATION: Scheduling noise rate? {schedule_qnoise_rate}")
     logger.info(f"QUANTIZATION: Using {num_bits} bits")
     logger.info(f"QUANTIZATION: Using {quant_noise_scalar} noise rate")
     logger.info(f"QUANTIZATION: jitter set to {jitter}")
