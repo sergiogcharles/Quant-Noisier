@@ -1,6 +1,6 @@
 #!/bin/bash
 
-seeds=(1 2 3)
+seeds=(2 3 1)
 for seed in "${seeds[@]}"; do
     TOTAL_NUM_UPDATES=2296
     WARMUP_UPDATES=137
@@ -13,7 +13,7 @@ for seed in "${seeds[@]}"; do
     SAVE_DIR="checkpoint/roberta/new-adaptive-mrpc-scalar-4-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
-    
+
     PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $MRPC_PATH \
         --restore-file $ROBERTA_PATH \
         --max-positions 512 \
@@ -42,7 +42,7 @@ for seed in "${seeds[@]}"; do
         --loss-file "losses.csv" \
         --lamb 0.125 \
         --seed $seed
-
+    
     rm $SAVE_DIR/checkpoint1.pt
     rm $SAVE_DIR/checkpoint2.pt
     rm $SAVE_DIR/checkpoint3.pt
