@@ -1,20 +1,21 @@
 #!/bin/bash
 
-seeds=(2 3 1)
+seeds=(3 1 2)
 for seed in "${seeds[@]}"; do
-    TOTAL_NUM_UPDATES=2296
-    WARMUP_UPDATES=137
-    LR=1e-05
+    TOTAL_NUM_UPDATES=2036
+    WARMUP_UPDATES=122
+    LR=2e-05
     NUM_CLASSES=2
     MAX_SENTENCES=4
     ROBERTA_PATH=roberta_base/model.pt
-    MRPC_PATH=MRPC-bin/
+    RTE_PATH=RTE-bin/
     UPDATE_FREQ=4
-    SAVE_DIR="checkpoint/roberta/mrpc-scalar-1-quant-noise-seed-$seed"
+    SCHED_QNOISE_RATE=True
+    SAVE_DIR="checkpoint/roberta/rte-scalar-4-scheduled-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
 
-    PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $MRPC_PATH \
+    PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
         --restore-file $ROBERTA_PATH \
         --max-positions 512 \
         --batch-size $MAX_SENTENCES \
@@ -36,8 +37,9 @@ for seed in "${seeds[@]}"; do
         --ddp-backend legacy_ddp \
         --quant-noise-scalar 0.5 \
         --save-dir $SAVE_DIR \
-        --bits 1 \
+        --bits 4 \
         --update-freq $UPDATE_FREQ \
+        --schedule-qnoise-rate $SCHED_QNOISE_RATE \
         --seed $seed
 
     rm $SAVE_DIR/checkpoint1.pt

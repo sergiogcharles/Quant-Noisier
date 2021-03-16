@@ -1,6 +1,6 @@
 #!/bin/bash
 
-seeds=(2 3 1)
+seeds=(3 1 2)
 for seed in "${seeds[@]}"; do
     TOTAL_NUM_UPDATES=2296
     WARMUP_UPDATES=137
@@ -10,7 +10,8 @@ for seed in "${seeds[@]}"; do
     ROBERTA_PATH=roberta_base/model.pt
     MRPC_PATH=MRPC-bin/
     UPDATE_FREQ=4
-    SAVE_DIR="checkpoint/roberta/mrpc-scalar-1-quant-noise-seed-$seed"
+    SCHED_QNOISE_RATE=True
+    SAVE_DIR="checkpoint/roberta/mrpc-scalar-4-scheduled-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
 
@@ -36,8 +37,9 @@ for seed in "${seeds[@]}"; do
         --ddp-backend legacy_ddp \
         --quant-noise-scalar 0.5 \
         --save-dir $SAVE_DIR \
-        --bits 1 \
+        --bits 4 \
         --update-freq $UPDATE_FREQ \
+        --schedule-qnoise-rate $SCHED_QNOISE_RATE \
         --seed $seed
 
     rm $SAVE_DIR/checkpoint1.pt

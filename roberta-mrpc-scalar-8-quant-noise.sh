@@ -51,4 +51,3 @@ for seed in "${seeds[@]}"; do
     rm $SAVE_DIR/checkpoint9.pt
     rm $SAVE_DIR/checkpoint10.pt
 done
-
