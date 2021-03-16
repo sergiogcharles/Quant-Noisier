@@ -43,14 +43,5 @@ for seed in "${seeds[@]}"; do
         --lamb 0.125 \
         --seed $seed
 
-    rm $SAVE_DIR/checkpoint1.pt
-    rm $SAVE_DIR/checkpoint2.pt
-    rm $SAVE_DIR/checkpoint3.pt
-    rm $SAVE_DIR/checkpoint4.pt
-    rm $SAVE_DIR/checkpoint5.pt
-    rm $SAVE_DIR/checkpoint6.pt
-    rm $SAVE_DIR/checkpoint7.pt
-    rm $SAVE_DIR/checkpoint8.pt
-    rm $SAVE_DIR/checkpoint9.pt
-    rm $SAVE_DIR/checkpoint10.pt
+    
 done

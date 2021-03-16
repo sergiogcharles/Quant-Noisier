@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash                                                                                                                                                                                          
 
 seeds=(2 3 1)
 for seed in "${seeds[@]}"; do
@@ -8,13 +8,13 @@ for seed in "${seeds[@]}"; do
     NUM_CLASSES=2
     MAX_SENTENCES=1
     ROBERTA_PATH=roberta_base/model.pt
-    MRPC_PATH=MRPC-bin/
+    RTE_PATH=RTE-bin/
     UPDATE_FREQ=16
     SAVE_DIR="checkpoint/roberta/new-adaptive-mrpc-scalar-4-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
 
-    PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $MRPC_PATH \
+    PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $RTE_PATH \
         --restore-file $ROBERTA_PATH \
         --max-positions 512 \
         --batch-size $MAX_SENTENCES \
