@@ -10,7 +10,7 @@ for seed in "${seeds[@]}"; do
     ROBERTA_PATH=roberta_base/model.pt
     MRPC_PATH=MRPC-bin/
     UPDATE_FREQ=16
-    SAVE_DIR="checkpoint/roberta/new-adaptive-mrpc-scalar-8-quant-noise-seed-$seed"
+    SAVE_DIR="checkpoint/roberta/new-adaptive-mrpc-scalar-1-quant-noise-seed-$seed"
     echo "running with seed $seed"
     echo "saving to $SAVE_DIR"
 
@@ -36,7 +36,7 @@ for seed in "${seeds[@]}"; do
         --ddp-backend legacy_ddp \
         --quant-noise-scalar 0.5 \
         --save-dir $SAVE_DIR \
-        --bits 8 \
+        --bits 1 \
         --update-freq $UPDATE_FREQ \
         --quant-noise-adaptive-new True \
         --loss-file "losses.csv" \
