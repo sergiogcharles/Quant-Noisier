@@ -1,6 +1,6 @@
 #!/bin/bash
 
-seeds=(2 3 1)
+seeds=(3 1 2)
 for seed in "${seeds[@]}"; do
     TOTAL_NUM_UPDATES=2036
     WARMUP_UPDATES=122
@@ -39,7 +39,7 @@ for seed in "${seeds[@]}"; do
         --save-dir $SAVE_DIR \
         --bits 8 \
         --update-freq $UPDATE_FREQ \
-        --schedule-qnoise-rate $SCHED_QNOISE_RATE
+        --schedule-qnoise-rate $SCHED_QNOISE_RATE \
         --seed $seed
 
     rm $SAVE_DIR/checkpoint1.pt
