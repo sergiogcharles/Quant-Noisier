@@ -29,7 +29,7 @@ PYTHONPATH="~/Quant-Noisier/fairseq" python -m fairseq_cli.train $MRPC_PATH \
     --best-checkpoint-metric accuracy --maximize-best-checkpoint-metric \
     --ddp-backend legacy_ddp \
     --quant-noise-scalar 0 \
-    --quant-noise-vanilla True \ 
+    --quant-noise-vanilla True \
     --save-dir $SAVE_DIR \
     --bits 1 \
     --update-freq $UPDATE_FREQ
